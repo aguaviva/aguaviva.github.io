@@ -1,0 +1,8 @@
+title: Aguaviva.GitHub.io
+description: 
+google_analytics: UA-3425939-7
+show_downloads: true
+theme: jekyll-theme-slate
+
+gems:
+  - jekyll-mentions
