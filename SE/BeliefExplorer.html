@@ -7,17 +7,15 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'UA-3425939-8');
 </script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SousVide</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 <link rel="stylesheet" href="https://gitcdn.link/repo/Chalarangelo/mini.css/master/dist/mini-default.min.css">
 
-<script>
+<script> 
 
 var Database = 
 {
@@ -26,7 +24,7 @@ var Database =
         question: "Pick a belief that clearly defines who you are, it could be that you believe in a certain religion, or karma, or spirits...",
         answers:
         {
-            "done"                               : "WouldChangeOnesMind",
+            "next"                               : "WouldChangeOnesMind",
         }
     },
 
@@ -40,15 +38,82 @@ var Database =
         }
     },
 
-    WontChangeMind :
+	WontChangeMind :
+	{
+		question:"Do you want to go through life believing in things that are true?",
+        answers:
+        {
+			"yes": "WantTruthButWontAcceptEvidence",			
+			"I don't mind": "DoNotWantTruthAndWontAcceptEvidence",			
+        }
+	},
+	
+	DoNotWantTruthAndWontAcceptEvidence:
+	{
+		question: "Ok, thank you very much for you time",
+        answers:
+        {			
+        }
+	},
+	
+    WantTruthButWontAcceptEvidence :
     {
         question: "Could you really go to rest of your life with a belief, and never have a way to realize whether is true?",
         answers:
         {
+			"If it is true for me that is what really matters" : "TrueForMe",
         }
     },
 
+    TrueForMe :
+	{
+        question: "If I consider true for me that your car is now mine, would I be right?",
+        answers:
+        {
+			"Yes": "ThankYou",
+			"No!": "WouldAcceptEvidence",
+        }
+	},
+	
+	ThankYou :
+	{
+		question: "Thank you!",
+		answers:
+		{
+		}
+	},
+	
     WouldAcceptEvidence :
+    {
+        question: "Could a person with a different belief than you still be right?",
+        answers: 
+		{
+			"Only one person could be right" : "OnlyOneBeliefCanBeTrue",
+			"Both persons could be right, truth depends on the observer" : "TruthDependsOnObserver",
+		}
+	},
+	
+	TruthDependsOnObserver :
+	{
+		question: "Is something true regardless of how a person believes it?",
+		answers:
+		{
+			"Yes, for example consider the placebo effect": "PlaceboEffect",
+			"No, you can believe on something and still be wrong": "OnlyOneBeliefCanBeTrue",
+		}
+	},
+	
+	PlaceboEffect :
+	{
+		question: "Are there any limitations? Could I be a surgeon by just believing I am?",
+		answers:
+		{
+			"Yes, everything is in your mind": "TrueForMe",
+		 	"No, just believing is not enough":"OnlyOneBeliefCanBeTrue",
+		}
+	},
+	
+    OnlyOneBeliefCanBeTrue :
     {
         question: "What belief did you pick?",
         answers:
@@ -73,19 +138,19 @@ var Database =
             "If I am wrong I dont lose anything."       : "PascalWager",
             "It made me be a better person."            : "BetterPerson",
             "The holy book is consistent with reality." : "HolyBookConsistent",
-            "I just know it."                           : "JustKnowIt",
+            "I just know it."                           : "GutFeeling",
             "I have faith."                             : "IHaveFaith",
         }
     },
 
-
+	
     IHaveFaith : 
     {
-        question: "does just believing in something, make that something true?",
+        question: "Does just believing in something, make that something true?",
         answers:
         {
             "Yes" : "FaithMakesThingsTrue",
-            "No" : "FaithDoesNotMakeBeliefTrue",
+            "No"  : "FaithDoesNotMakeBeliefTrue",
             "People can believe in whatever they want" : "AllBelievesAreOK",
         }
     },
@@ -95,10 +160,21 @@ var Database =
         question: "If someone who doesn\'t believe in <belief> told us that they have another belief that makes them feel better, would it make their belief true?",
         answers:
         {
-            "that wouldn\'t be reliable" : "FeelBetterWithOtherBeliefNotReliable",
+            "That wouldn\'t be reliable" : "FeelBetterWithOtherBeliefNotReliable",
+			"Yes it it works for them"   : "BeliefGoodIfMakesYouFeelBetter",
         }
     },
 
+	BeliefGoodIfMakesYouFeelBetter :
+    {
+        question: "If I believe that smoking makes me feel better, does it make it a good belief?",
+        answers:
+        {
+            "yes" : "ThanksForYourTime",
+            "no" : "RaisedWithBeliefIsTrueNot",
+        }
+    },
+	
     FeelBetterWithOtherBeliefNotReliable : 
     {
         question: "If it's not reliable for them, Why was it reliable for yourself?",
@@ -219,18 +295,114 @@ var Database =
         {
         }
     },
+	
+    GutFeeling :
+    {
+        question: "Do your instincts, your guts, your feelings always lead you to the right path?",
+        answers:
+        {
+            "Well it might not lead me down a path that I expected, but it\'s always the right path" : "GutLeadsToGoodDecisions"
+        }
+    },
+
+    GutLeadsToGoodDecisions :
+    {
+        question: "do you have any way of testing your instinct, your gut, your feelings?",
+        answers:
+        {
+            "Not really, I just trust them" : "CannotTestGutFeelings"
+        }
+    },
+
+    CannotTestGutFeelings :
+    {
+        question: "If you have no way of testing your gut feelings, how do you know that it\'s actually working in the way that you think that it is?",
+        answers:
+        {
+        }
+    },
 }
 
+function showDialog()
+{
+    $('#Dialog').show();        
+    $('#AddQuestion').hide();
+    $('#AddAnswer').hide();
+    if (admin) 
+    {
+        $('#AddAnswerButton').show();
+    }
+}
+
+function addQuestion(response)
+{
+    if (admin) 
+    {
+        $("#Dialog").hide();
+        $("#AddQuestion").show();
+        $("#AddQuestionResponse").html(response);
+        $('#EditedQuestion').val("");
+        history.pushState(currentStage, null, "?/AddQuestion");
+    }
+    else
+    {
+        alert("links in red are do not have a socratic question yet, please explore the blue ones");
+    }
+    
+    return false;
+}
+
+function LoadDatabase()
+{
+    var base = null;//localStorage.getItem("Database");
+    if (base!=null)
+    {
+        try {
+            Database = JSON.parse(base);
+        } catch (e) {            
+        }            
+    }
+}
+
+function SaveDatabase()
+{
+    localStorage.setItem("Database", JSON.stringify(Database));
+}
+
+function Update()
+{
+    Process(currentStage,undefined, "" );
+}
+
+function ProcessPush(sectionName, itemChosen)
+{
+    history.pushState(sectionName, null, "?/"+sectionName);
+    Process(sectionName, itemChosen)
+}
+
+var admin = false;
+var deleting = false;
+var currentStage = ""
 var variables = {}
-function Process(sectionName, previousSectionName, itemChosen)
+function Process(sectionName, itemChosen)
 {   
+    showDialog();
+    
+    currentStage = sectionName;
     variables[sectionName] = itemChosen;
     item = Database[sectionName];
- 
-    $("#question").html(item.question.replace(/(<.*>)/, itemChosen))
+    
+    var a = item.question.replace(/(<.*>)/, unescape(itemChosen));
+    if (deleting)
+    {
+        a+="<span class='close' onclick='delete item.question; deleting=false; window.history.back();return false;'></span>";    
+    }
+    $("#Question").html(a)
+    
     var a="<ul>";
     for(var key in item.answers)
     {
+        //get object
         var res = "";
         var match = key.match(/\$(.*)\$/);
         if (match!=null && match.length==2)
@@ -238,64 +410,214 @@ function Process(sectionName, previousSectionName, itemChosen)
                 
         var answer = key.replace(/(\$)/g,"");
         var nextSectionName = item.answers[key];
-        
-        var onClick = 'Process("'+nextSectionName+'","'+sectionName+'", "'+res+'");return false;';
 
         a+="<li>";
         if (Database[nextSectionName]!=undefined)
-            a+="<a href=''onclick='"+onClick+"'>"+answer+"</a>";
+        {            
+            a+="<a href='' onclick='ProcessPush(\""+nextSectionName+"\",\""+res+"\");return false;'>"+answer+"</a>";
+        }
         else
-            a+="<div>"+answer+"</div>";
+        {
+            a+="<a href='' style='color:rgb(190,69,66)' onclick='return addQuestion(unescape(\""+escape(key)+"\"))'>"+answer+"</a>"            
+        }
+        
+        if (deleting)
+        {
+            a+="<span class='close' onclick='delete item.answers[unescape(\""+escape(key)+"\")]; deleting=false;Update();return false;'></span>";
+        }        
         a+="</li>";
     }
+    
     a+="</ul>";
     $("#answers").html(a)
 }
 
-function Validate(itemName)
+
+var out = "";
+var visitedNodes = {}
+function PrintNodes(root, prefix)
 {
-    var orphan = []
-    for(var key1 in Database)
-    {
-        var responses = Database[key1].answers
-        for(var key2 in responses)
-        {
-            var dest = Database[responses[key2]]
-            if (dest==undefined)
-                orphan.push(responses[key2]);
-        }
+    var entry = Database[root];
+    
+	out +=  root+" : "+entry.question + "\n";
+
+    //filter answers without question
+    var idlist = []
+    for (var i in entry.answers)
+	{	
+        var id = entry.answers[i]      
+
+        if (Database[id]==undefined)
+            continue;
+
+        if (visitedNodes[id]==undefined)
+            visitedNodes[id]=""
+        else 
+            continue;
+            
+        idlist.push(id)
     }
-    return orphan;
+    
+    for (var i = 0; i < idlist.length; i++)
+    {
+    
+		if (i == idlist.length - 1)
+		{
+            out += prefix + " '--"
+            PrintNodes(idlist[i], prefix + "    ")
+		}
+		else
+		{
+            out += prefix + " |--"
+            PrintNodes(idlist[i], prefix + " |  ")
+		}		
+	}
 }
+
 
 $(document).ready(function()
 {
-    Validate("PickABelief");
-    Process("PickABelief",undefined,  "");
+    LoadDatabase()
+    if (admin==true)
+    {
+        $('.admin').show()
+        $('#AddAnswerButton').click(function() 
+        {
+            $('#EditedAnswer').val("");
+            $('#AddAnswerButton').hide();
+            $('#AddAnswer').show();        
+            history.pushState(currentStage, null, "?/EditAnswer");
+        })
+
+        $('#CancelAnswer').click(function() 
+        {
+            $('#AddAnswer').hide();
+            $('#AddAnswerButton').show();
+            window.history.back();
+        })
+        
+        $('#SaveAnswer').click(function() 
+        {
+            $('#AddAnswer').hide();
+            $('#AddAnswerButton').show();        
+            var res = $.trim($('#EditedAnswer').val());
+            if (res!="")
+            {
+                if (Database[currentStage].answers==undefined)
+                    Database[currentStage].answers = {}
+                    
+                if (Database[currentStage].answers[res]==undefined)
+                {
+                    Database[currentStage].answers[res]="";    
+                    Process(currentStage,undefined, "" );
+                }
+            }
+            window.history.back();
+        })
+        
+        $('#AddQuestionSave').click(function() 
+        {
+            $('#AddQuestion').hide();
+            $('#Dialog').show();        
+            var res = $.trim($('#EditedQuestion').val());
+            if (res!="")
+            {
+                var rnd = Math.random()+""
+                Database[currentStage].answers[$("#AddQuestionResponse").text()]=rnd;    
+                Database[rnd]={}
+                Database[rnd].question = res
+                Database[rnd].answers = {}
+                
+                ProcessPush(rnd, "" );
+            }
+            window.history.back();
+        })
+        
+        $('#AddQuestionCancel').click(function() 
+        {
+            $('#AddQuestion').hide();
+            $('#Dialog').show();  
+            window.history.back();      
+        })
+    }
+    
+    var path;
+    var variables = window.location.href.split("?")
+    var url = variables[0]
+    if (variables.length==2)
+        path = variables[1].split("/");
+    else
+        path = ["","PickABelief"]
+    var state = path[path.length-1]
+    history.replaceState(state, "", url +"?/"+state);
+    Process(path[path.length-1],undefined, "" );    
+    
+    PrintNodes("PickABelief", "");
+    console.log(out)
+    $("#QuestionList2").html(out);
 })
+
+window.onpopstate = function(event) 
+{    
+  Process(event.state, null);
+};
 
 </script>
 </head>
 <body>
-  <header>
-  <a href="#" class="logo">Belief Explorer</a>
-</header>
-	<div class="container">
-    <div class="row">
-      <div class="col-lg-4 col-lg-offset-4 col-md-6 col-md-offset-3 col-sm-12">
-        <form>
-        <fieldset>
-          <div id="question"></div>
-          <br>
-          <div class="input-group" id="answers"></div>
-          </fieldset>
-      </form>
-    </div>
-    </div>
-  </div>
+    <header>
+        <a href="#" class="logo">Belief Explorer</a>
+        <button class="admin" style="display:none;" onclick='deleting=!deleting; Update();' >Delete</button>
+        <button class="admin" style="display:none;" onclick='SaveDatabase();alert("done")' >Save</button>
+    </header>
 
-  <footer>
-  <p>&copy; 2001-2016 Web Corporation | <a href="#">About</a> | <a href="#">Terms of use</a></p>
-</footer>
+	<div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-4 col-md-6 col-md-offset-3 col-sm-12">
+                <fieldset id="Dialog">
+                    <div id="Question"></div>
+                    <br>
+                    <div class="input-group" id="answers"></div>
+                    <div class="row" >
+                        <button class="admin" style="display:none;" id="AddAnswerButton" >Add an Answer</button>
+                    </div>
+                    <div id="AddAnswer" style="display:none;">
+                        <div class="row " >
+                            <div class="col-sm-12 col-md">
+                                <input id="EditedAnswer" type='text' value='' id='username' placeholder='add a response' style="width:99%; onclick='this.hide();$(#EditAnswer).show()'">
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col-sm-offset-8 col-sm-2 col-md-offset-8 col-md-2">
+                            <button id="CancelAnswer" class="bordered">cancel</button>
+                            </div>
+                            <div class="col-sm-2 col-md-2">
+                                <button id="SaveAnswer" class="bordered primary"> save </button>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset id="AddQuestion" style="display:none;">
+                    the answer: 
+                    <pre id="AddQuestionResponse" >cacas</pre>                    
+                    doesn't have a socratic question yet, write your own!
+                    <input id="EditedQuestion" type='text' value='' id='username' placeholder='add a question' style="width:99%; onclick='this.hide();$(#EditAnswer).show()'">
+                    <div class="row ">
+                        <div class="col-sm-offset-8 col-sm-2 col-md-offset-8 col-md-2">
+                        <button id="AddQuestionCancel" class="bordered">cancel</button>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <button id="AddQuestionSave" class="bordered primary"> save </button>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2001-2016 Web Corporation | <a href="#">About</a> | <a href="#">Terms of use</a></p>
+    </footer>
 </body>
 </html>
+
