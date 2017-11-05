@@ -1,0 +1,454 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<title>SE Map</title>
+
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+        <script src="SE.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="  crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.min.js"></script>
+		<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cola.js"></script>
+		<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cytoscape-cola.js"></script>
+        <link rel="stylesheet" href="https://gitcdn.link/repo/Chalarangelo/mini.css/master/dist/mini-default.min.css">
+        
+		<style>
+            body 
+            {
+                margin: 0
+            }
+
+            .responsive-label 
+            {
+                align-items: center;
+            }
+
+            .cardo 
+            {
+                width: 750px;
+                margin: auto;
+            }
+
+            #cy 
+            {
+                border: solid;
+                border-width: 1;
+                width: 100%;
+                height: 100%;
+            }
+		</style>
+		<script>
+            class GoogleStuff
+            {
+                LoadSecretsFromStorage()
+                {
+                    this.apikey = localStorage.getItem("apikey")
+                    this.clientId = localStorage.getItem("clientId")
+                    this.spreadsheetId = localStorage.getItem("spreadsheetId")
+                }
+
+                SaveSecretsFromDialogIntoStorage()
+                {
+                    localStorage.setItem("clientId", $("#clientId").val())
+                    localStorage.setItem("apikey", $("#apikey").val())
+                    localStorage.setItem("spreadsheetId", $("#spreadsheetId").val())
+                }
+                
+                AreSecretsGood()
+                {
+                    if (this.clientId==null || this.apikey==null || this.spreadsheetId==null)
+                        return false;
+                    return true;
+                }
+
+                ShowSecretsDialog()
+                {
+                    $("#clientId").val(this.clientId)
+                    $("#apikey").val(this.apikey)
+                    $("#spreadsheetId").val(this.spreadsheetId)
+                    
+                    ShowGoogleSecrets(true)
+                }
+                
+                Connect(responseCallback)
+                {
+                    this.LoadSecretsFromStorage();
+                    if (this.AreSecretsGood()==false)
+                    {
+                        this.ShowSecretsDialog();
+                        return;
+                    }                
+                    
+                    gapi.client.init(
+                    {
+                        apiKey: this.apikey,
+                        clientId: this.clientId,
+                        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                        scope: "https://www.googleapis.com/auth/spreadsheets.readonly"
+                    }).then(
+                    function() 
+                    {
+                        ShowGoogleSecrets(false);
+                        
+                        var inst = gapi.auth2.getAuthInstance();
+                        if (inst!=null)
+                        {
+                            responseCallback()
+                            // Listen for sign-in state changes.
+                            inst.isSignedIn.listen(updateSigninStatus);
+
+                            // Handle the initial sign-in state.
+                            updateSigninStatus(inst.isSignedIn.get());
+                            //authorizeButton.onclick = handleAuthClick;
+                            //signoutButton.onclick = handleSignoutClick;
+                            gapi.auth2.getAuthInstance().signIn();
+                        }
+                        else
+                        {
+                            this.ShowSecretsDialog();
+                        }
+                    });             
+                }
+                
+                GetData(cmd, responseCallback)
+                {                            
+                    gapi.client.sheets.spreadsheets.values.get(
+                    {
+                        spreadsheetId: this.spreadsheetId,
+                        range: 'Class Data!'+cmd
+                    }).then(responseCallback, 
+                        function(response) 
+                        {
+                            alert('Error: ' + response.result.error.message);
+                        });                
+                }
+            }
+
+            googleStuff = new GoogleStuff();
+
+            function ShowGoogleSecrets(state)
+            {
+                $("#secrets-toggle").prop("checked", state);
+            }
+
+            function handleClientLoad() 
+            {
+                //gapi.load('client:auth2', Connect);
+            }
+            
+            function Connect()            
+            {                
+                googleStuff.Connect(function()
+                {
+                    googleStuff.GetData("A1", function(res)
+                    {
+                        alert(res.result.values[0][0]);
+                    })
+                
+                });
+            }                        
+            
+            function updateSigninStatus(isSignedIn) {}
+            
+            function handleAuthClick(event) 
+            {
+                gapi.auth2.getAuthInstance().signIn();
+            }
+
+            function handleSignoutClick(event) 
+            {
+                gapi.auth2.getAuthInstance().signOut();
+            }            
+            
+			document.addEventListener('DOMContentLoaded', function()
+            {
+				var cy = window.cy = cytoscape({
+					container: document.getElementById('cy'),
+                    boxSelectionEnabled: false,
+
+                    minZoom: 0.1,
+                    maxZoom: 100,
+                    wheelSensitivity: 0.1,
+                    
+					layout: {
+						name: 'cola',
+					},
+					style: [
+						{
+							selector: 'node',
+							css: {
+								'content': 'data(label)',
+                                'text-valign': 'center',
+                                'text-halign': 'center',
+                                'shape': 'roundrectangle',
+                                'text-wrap': 'wrap',   
+                                'width': '300px',       
+                                'text-max-width' : '300px',
+                                'height': '100px',                      
+							}
+						},
+						{
+							selector: 'edge',
+							css: 
+                            {
+                                'curve-style': 'bezier',
+                                'label': 'data(label)',
+								'target-arrow-shape': 'triangle'
+							}
+						}
+					],
+				});
+
+                function simulate()
+                {
+                    cy.layout({
+						name: 'cola',
+                        //infinite: true,
+                        //fit: false,
+                        edgeLength:400
+					}).start(30)
+                }
+                
+                function generateRandomID()
+                {
+                    var id = ""+ Math.random();                    
+                    return id.split(".").join("");
+                }
+
+                // tapholding brings up a dialog to edit the node and the enges text
+                cy.on('taphold ', 'node', function(evt)
+                {
+                    $("#question").attr("node", evt.target.id());
+                    $("#question").val(evt.target.data().label)
+
+                    var out = "";
+                    var answers = evt.target.connectedEdges();
+                    var j=0;
+                    for(var i=0;i<answers.length;i++)
+                    {
+                        var data = answers[i].data();                        
+                        if (evt.target.id() == data.source)
+                        {
+                            out += "<div class='row responsive-label'>"
+                            out += "<div class='col-sm-12 col-md-3'>"
+                            out += "<label for='answer1'>"
+                            out += "Answer " + (j+1)
+                            out += "</label></div>"
+                            out += "<div class='col-sm-12 col-md'>"
+                            out += "<input type='text' value='" + data.label + "' edge='" + data.id + "' style='width:85%;'>"
+                            out += "</div>"
+                            out += "</div>"
+                            j++;
+                        }
+                    }
+                    $("#answers").html(out);
+                    
+                    $("#modal-toggle").prop("checked", true);
+                });
+
+                //right clicking on a node inserts a new one
+                cy.on('cxttap', 'edge', function(evt)
+                {
+                    var source = evt.target.source();
+                    var target = evt.target.target();
+                    
+                    var sp = source.position();
+                    var st = target.position();
+                    
+                    var id = source.id() + target.id()
+                    
+                    var eles = cy.add([
+                      { group: "nodes", data: { id: id, label: "New Node" }, position: { x: (sp.x + st.x)*.5, y: (sp.y + st.y)*.5 } },                      
+                      { group: "edges", data: { id: generateRandomID(), source: source.id(), target: id } },
+                      { group: "edges", data: { id: generateRandomID(), source: id, target: target.id(), label: evt.target.data().label } }
+                      
+                    ]);
+                    
+                    cy.remove( evt.target );
+                    simulate();
+                });
+
+                //right clicking on the background creates a node
+                cy.on('cxttap', function(evt)
+                {                    
+                    if (evt.target===cy)
+                    {                    
+                        cy.add({ group: "nodes", data: { id: generateRandomID(), label: "No question" }, renderedPosition: evt.originalEvent });
+                    }
+                });
+                
+                // shift selecting 2 nodes creates a link
+                cy.on('select', 'node', function(evt)
+                {
+                    var node = evt.target;
+                    console.log( 'select  ' + node.id() );
+                    
+                    var selected = cy.elements(":selected");
+                    if (selected.length==2)
+                    {
+                        var source = (node.id()==selected[1].id())?selected[0].id():selected[1].id();
+                        var target = node.id();
+                    
+                        var eles = cy.add(
+                        [
+                            { group: "edges", data: { id: generateRandomID(), source: source, target: target  } }
+                        ]);    
+                        simulate();
+                    }                    
+                });
+
+                // the delete key erases the selected nodes
+                $('html').keydown(function(e)
+                {
+                    if(e.keyCode == 46) 
+                    {
+                        cy.remove(":selected");
+                        simulate();
+                    }
+                });
+                
+                function InitializeGraphFromJSON()
+                {
+                    var Database = GetDatabase();
+                    
+                    var nodes = []
+                    var edges = []
+                    for (var qkey in Database) 
+                    {
+                        nodes.push( { group: "nodes", data: { id: qkey, label: Database[qkey].question } })                      
+                        
+                        var answers = Database[qkey].answers
+                        for(var akey in answers)
+                        {
+                            var target = answers[akey]
+                            edges.push({ group: "edges", data: { id: generateRandomID(), source: qkey, target: target, label: akey  } })
+                        }
+                    }
+                    
+                    cy.add(nodes);
+                    cy.add(edges);
+                }
+                
+                InitializeGraphFromJSON();
+                simulate();                
+			});
+            
+            // Handles on save for the node editor dialog            
+            function OnSave()
+            {
+                cy.startBatch();                
+                var q = $("#question")
+                var id = q[0].attributes["node"].nodeValue;
+                cy.$( "#"+id ).data("label", q[0].value);
+                
+                var answers = $("#answers input");               
+                for(var i=0;i<answers.length;i++)
+                {
+                    var id = answers[i].attributes["edge"].nodeValue;
+                    cy.$( "#"+id ).data("label", answers[i].value);
+                }
+                cy.endBatch()
+                
+                $("#modal-toggle").prop("checked", false);
+            }   
+
+
+        
+		</script>
+        <script async defer src="https://apis.google.com/js/api.js"
+          onload="this.onload=function(){};handleClientLoad()"
+          onreadystatechange="if (this.readyState === 'complete') this.onload()">
+        </script>        
+	</head>
+
+	<body>
+
+        <header class="sticky">
+          <a href="#" class="logo">SE Map</a>
+          <span>|</span>
+          <button>About</button>
+          <button>Contact</button>
+        </header>
+        
+        <div class="container">
+            <div class="content">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <div id="cy"></div>
+                    </div>            
+                </div>            
+            </div>         
+        </div>
+
+        <!-- comment -->
+        <input id="modal-toggle" type="checkbox"/>
+        <div class="modal">
+          <div class="cardo">
+            <label for="modal-toggle"></label>
+                <form>
+                    <h3 class="section">Edit question</h3>
+                    <fieldset>
+                        <legend>Aligned form (using grid)</legend>
+                        <div class="row responsive-label">
+                            <div class="col-sm-12 col-md-3">
+                                <label for="question">Question</label>
+                            </div>
+                            <div class="col-sm-12 col-md">
+                                <textarea type="text" id="question" style="width:85%;" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div id="answers"></div>
+
+                        <label class="button primary" for="modal-toggle">Close</label>
+                        <label class="button primary" id="save" onclick="OnSave()">Save</label>
+                    </fieldset>
+                </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- comment -->
+        <input id="secrets-toggle" type="checkbox"/>
+        <div class="modal">
+          <div class="cardo">
+            <label for="secrets-toggle"></label>
+                <form>
+                    <h3 class="section">Edit question</h3>
+                    <fieldset>
+                        <legend>Aligned form (using grid)</legend>
+                        <div class="row responsive-label">
+                            <div class="col-sm-12 col-md-3">
+                                <label for="clientId">Client ID</label>
+                            </div>
+                            <div class="col-sm-12 col-md">
+                                <input type="text" id="clientId" style="width:85%;" rows="3"></input>
+                            </div>
+                        </div>
+                        <div class="row responsive-label">
+                            <div class="col-sm-12 col-md-3">
+                                <label for="apikey">API key</label>
+                            </div>
+                            <div class="col-sm-12 col-md">
+                                <input type="text" id="apikey" style="width:85%;" rows="3"></input>
+                            </div>
+                        </div>
+                        <div class="row responsive-label">
+                            <div class="col-sm-12 col-md-3">
+                                <label for="spreadsheetId">Spreadsheet ID</label>
+                            </div>
+                            <div class="col-sm-12 col-md">
+                                <input type="text" id="spreadsheetId" style="width:85%;" rows="3"></input>
+                            </div>
+                        </div>
+
+                        <label class="button primary" for="secrets-toggle">Close</label>
+                        <label class="button primary" id="secretsSave" onclick="googleStuff.SaveSecretsFromDialogIntoStorage(); Connect()">Save</label>
+                    </fieldset>
+                </form>
+            </div>
+          </div>
+        </div>
+
+
+	</body>
+
+</html>
