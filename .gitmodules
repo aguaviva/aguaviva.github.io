@@ -1,3 +1,6 @@
 [submodule "KalmanFilter"]
 	path = KalmanFilter
 	url = https://github.com/aguaviva/KalmanFilter.git
+[submodule "MyTensorflow"]
+	path = MyTensorflow
+	url = https://github.com/aguaviva/MyTensorflow
